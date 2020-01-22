@@ -2,8 +2,8 @@
 
 int servo_motor1 =
 int servo_motor2 =
-int power_motor1 =
-int power_motor2 =
+int power_motorL =
+int power_motorR =
 int arm_motor =
 int distance_sensor1 =
 int distance_sensor2 =
@@ -11,7 +11,36 @@ int light_sensor =
 
 class chassis {
   public:
-  
+  int right = power_motorR;
+  int left = power_motorL;
+  int traverse_speed = 50; //pwm of 0-255
+  int rotate_speed = 10; //pwm of 0-255
+  void traverse(bool front) //if front = 1, forward
+  {
+    if(front == 1)
+    {
+      analogWrite(right, traverse_speed);
+      analogWrite(left, traverse_speed);
+    }
+    else //figure out how to drive motor backwards
+    {
+      analogWrite(right, -1 * traverse_speed);
+      analogWrite(left, -1 * traverse_speed);
+    }
+  }
+  void rotate(bool right) //if right = 1, rightward
+  {
+    if(right == 1)
+    {
+      analogWrite(right, -1 * traverse_speed);
+      analogWrite(left, traverse_speed);
+    }
+    else //figure out how to drive motor backwards
+    {
+      analogWrite(right, traverse_speed);
+      analogWrite(left, -1 * traverse_speed);
+    }
+  }
 }
 
 class rescue_arm {
@@ -21,7 +50,7 @@ class rescue_arm {
 
 class sensors {
   public:
-
+  
 }
 
 void state0(int* state)
@@ -58,8 +87,8 @@ void setup() {
   // put your setup code here, to run once:
   servo1.attach(servo_motor1); 
   servo2.attach(servo_motor2); 
-  pinMode(power_motor1, OUTPUT); 
-  pinMode(power_motor2, OUTPUT); 
+  pinMode(power_motorL, OUTPUT); 
+  pinMode(power_motorR, OUTPUT); 
   pinMode(arm_motor, OUTPUT);
   pinMode(distance_sensor1, INPUT); 
   pinMode(distance_sensor2, INPUT); 
@@ -71,8 +100,8 @@ void loop() {
 //initialize
 servo1.write(0);
 servo2.write(0);
-digitalWrite(power_motor1, LOW);
-digitalWrite(power_motor2, LOW);
+digitalWrite(power_motorL, LOW);
+digitalWrite(power_motorR, LOW);
 digitalWrite(arm_motor, LOW);
 
   switch(state){
