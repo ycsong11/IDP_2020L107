@@ -69,13 +69,19 @@ class chassis {
 class rescue_arm {
   public:
   int motor_power = 50; //pwm of 0-255 TODO:callibrate this
+  int power_at_rest = 10;
+  int rescue_arm_duration = 500; //the time before the motor reduces power
   void hold()
   {
     analogWrite(arm_motor, motor_power);
+    delay(rescue_arm_duration);
+    analogWrite(arm_motor, power_at_rest);
   }
   void relax()
   {
-    digitalWrite(arm_motor, 0);
+    analogWrite(arm_motor, -1 * motor_power);
+    delay(rescue_arm_duration);
+    digitalWrite(arm_motor, LOW);
   }
 };
 
