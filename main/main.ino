@@ -114,19 +114,20 @@ void state0(int* state)
   //initialize
   servo1.write(90);
   servo2.write(90);
-  digitalWrite(power_motorL, LOW);
-  digitalWrite(power_motorR, LOW);
+  chassis.halt();
   digitalWrite(arm_motor, LOW);
-  
+  delay(100);
   while(sensors.detect_white() != 2)
   {
-    if(sensors.detect_white() != 0){//throw color sensor calliration error}
+    //if(sensors.detect_white() != 0){//throw color sensor calliration error}
     chassis.traverse(1);
   }
+  delay(10);
   chassis.rotate90(1);
+  delay(10);
   while(sensors.detect_white() != 3)
   {
-    if(sensors.detect_white() != 0){//throw color sensor calliration error}
+    //if(sensors.detect_white() != 0){//throw color sensor calliration error}
     chassis.traverse(1);
   }
   chassis.halt();
