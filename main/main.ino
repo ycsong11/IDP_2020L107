@@ -1,16 +1,26 @@
 #include <Servo.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+
 Servo servo1;
 Servo servo2;
 
-int servo_motor1 = 1;
-int servo_motor2 = 2;
-int power_motorL = 3;
-int power_motorR = 4;
-int arm_motor = 5;
+int servo_motor1 = 9;
+int servo_motor2 = 10;
+int power_motorL = 1;
+int power_motorR = 2;
+int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A2;
 int light_sensorL = A3;
 int light_sensorR = A4;
+
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+Adafruit_DCMotor *motorL = AFMS.getMotor(power_motorL);
+Adafruit_DCMotor *motorR = AFMS.getMotor(power_motorR);
+Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
@@ -19,69 +29,83 @@ class chassis {
   int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
+    motorL->setSpeed(traverse_speed);
+    motorR->setSpeed(traverse_speed);
     if(front == 1)
     {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
+      motorL->run(FORWARD);
+      motorR->run(FORWARD);
     }
-    else //figure out how to drive motor backwards
+    else 
     {
-      analogWrite(power_motorR, -1 * rotate_speed);
-      analogWrite(power_motorL, -1 * rotate_speed);
+      motorL->run(BACKWARD);
+      motorR->run(BACKWARD);
     }
   }
   void rotate(bool right) //if right = 1, turn rightward
   {
+    motorL->setSpeed(rotate_speed);
+    motorR->setSpeed(rotate_speed);
     if(right == 1)
     {
-      analogWrite(power_motorR, -1 * traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
+      motorL->run(FORWARD);
+      motorR->run(BACKWARD);
     }
-    else //figure out how to drive motor backwards
+    else 
     {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, -1 * traverse_speed);
+      motorL->run(BACKWARD);
+      motorR->run(FORWARD);
     }
   }
   void rotate90(bool right)
   {
+    motorL->setSpeed(rotate_speed);
+    motorR->setSpeed(rotate_speed);
     if(right == 1)
     {
-      analogWrite(power_motorR, -1 * traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
+      motorL->run(FORWARD);
+      motorR->run(BACKWARD);
     }
     else //figure out how to drive motor backwards
     {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, -1 * traverse_speed);
+      motorL->run(BACKWARD);
+      motorR->run(FORWARD);
     }
     delay(rotate90_duration);
-    digitalWrite(power_motorR, LOW);
-    digitalWrite(power_motorL, LOW);
+    motorL->setSpeed(0);
+    motorR->setSpeed(0);
+    delay(10);
+    motorL->run(RELEASE);
+    motorR->run(RELEASE);
   }
   void halt()
   {
-    digitalWrite(power_motorR, LOW);
-    digitalWrite(power_motorL, LOW);
+    motorL->setSpeed(0);
+    motorR->setSpeed(0);
+    delay(10);
+    motorL->run(RELEASE);
+    motorR->run(RELEASE);
   }
 };
 
 class rescue_arm {
   public:
-  int motor_power = 50; //pwm of 0-255 TODO:callibrate this
+  int motor_speed = 50; //pwm of 0-255 TODO:callibrate this
   int power_at_rest = 10;
   int rescue_arm_duration = 500; //the time before the motor reduces power
   void hold()
   {
-    analogWrite(arm_motor, motor_power);
+    motor_arm->run(FORWARD);
+    motor_arm->setSpeed(motor_speed);
     delay(rescue_arm_duration);
-    analogWrite(arm_motor, power_at_rest);
+    motor_arm->setSpeed(0);
   }
   void relax()
   {
-    analogWrite(arm_motor, -1 * motor_power);
+    motor_arm->run(BACKWARD);
+    motor_arm->setSpeed(motor_speed);
     delay(rescue_arm_duration);
-    digitalWrite(arm_motor, LOW);
+    motor_arm->setSpeed(0);
   }
 };
 
@@ -122,10 +146,10 @@ sensors sensors;
 void state0(int* state)
 {
   //initialize
+  motor_arm->setSpeed(0);
   servo1.write(90);
   servo2.write(90);
   chassis.halt();
-  digitalWrite(arm_motor, LOW);
   delay(100);
 
   
@@ -257,13 +281,12 @@ void setup() {
   // put your setup code here, to run once:
   servo1.attach(servo_motor1); 
   servo2.attach(servo_motor2); 
-  pinMode(power_motorL, OUTPUT); 
-  pinMode(power_motorR, OUTPUT); 
-  pinMode(arm_motor, OUTPUT);
   pinMode(distance_sensor1, INPUT); 
   pinMode(distance_sensor2, INPUT); 
   pinMode(light_sensorL, INPUT); 
   pinMode(light_sensorR, INPUT);
+  AFMS.begin();
+  Serial.begin(9600);
 }
 
 int state = 0;
