@@ -24,22 +24,28 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 50; //pwm of 0-255
-  int rotate_speed = 10; //pwm of 0-255
-  int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
+  int traverse_speed = 255; //pwm of 0-255
+  int rotate_speed = 100; //pwm of 0-255
+  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
-    motorL->setSpeed(traverse_speed);
-    motorR->setSpeed(traverse_speed);
+    motorL->setSpeed(100);
+    motorR->setSpeed(100);
     if(front == 1)
     {
       motorL->run(FORWARD);
       motorR->run(FORWARD);
+      delay(100);
+      motorL->setSpeed(traverse_speed - 6);
+      motorR->setSpeed(traverse_speed);
     }
     else 
     {
       motorL->run(BACKWARD);
       motorR->run(BACKWARD);
+      delay(100);
+      motorL->setSpeed(traverse_speed - 6);
+      motorR->setSpeed(traverse_speed);
     }
   }
   void rotate(bool right) //if right = 1, turn rightward
@@ -80,9 +86,12 @@ class chassis {
   }
   void halt()
   {
+    motorL->setSpeed(100);
+    motorR->setSpeed(100);
+    delay(100);
     motorL->setSpeed(0);
     motorR->setSpeed(0);
-    delay(10);
+    //delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
   }
@@ -158,14 +167,29 @@ void setup() {
 int state = 0;
 
 void loop() {
-
+  
+  delay(5000);
+  chassis.traverse(1);
+  delay(5400);
+  chassis.halt();
+  chassis.rotate90(1);
+  chassis.traverse(1);
+  delay(5000);
+  chassis.halt();
   chassis.traverse(1);
   delay(3000);
   chassis.halt();
-  delay(1000);
   chassis.traverse(0);
-  delay(3000);
+  delay(2000);
   chassis.halt();
-  delay(1000);
-
+  chassis.rotate90(1);
+  chassis.rotate90(1);
+  chassis.traverse(1);
+  delay(6000);
+  chassis.halt();
+  chassis.rotate(1);
+  chassis.traverse(1);
+  delay(5400);
+  chassis.halt();
+  
 }

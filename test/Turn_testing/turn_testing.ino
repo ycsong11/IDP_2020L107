@@ -24,9 +24,9 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 50; //pwm of 0-255
+  int traverse_speed = 255; //pwm of 0-255
   int rotate_speed = 10; //pwm of 0-255
-  int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
+  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
     motorL->setSpeed(traverse_speed);
@@ -158,8 +158,24 @@ void setup() {
 int state = 0;
 
 void loop() {
-
+  delay(5000);
+  chassis.traverse(1);
+  delay(5000);
   chassis.rotate90(1);
   delay(1000);
-
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.rotate90(1);
+  delay(1000);
+  chassis.traverse(0);
 }
