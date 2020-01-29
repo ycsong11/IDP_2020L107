@@ -24,7 +24,7 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 255; //pwm of 0-255
+  int traverse_speed = 50; //pwm of 0-255
   int rotate_speed = 100; //pwm of 0-255
   int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
@@ -46,6 +46,25 @@ class chassis {
       delay(100);
       motorL->setSpeed(traverse_speed - 6);
       motorR->setSpeed(traverse_speed);
+    }
+  }
+  void manual(int speed_L, int speed_R, bool front)
+  {
+    if(front == 1)
+    {
+      motorL->run(FORWARD);
+      motorR->run(FORWARD);
+      delay(100);
+      motorL->setSpeed(speed_L);
+      motorR->setSpeed(speed_R);
+    }
+    else 
+    {
+      motorL->run(BACKWARD);
+      motorR->run(BACKWARD);
+      delay(100);
+      motorL->setSpeed(speed_L);
+      motorR->setSpeed(speed_R);
     }
   }
   void rotate(bool right) //if right = 1, turn rightward
@@ -174,9 +193,24 @@ void state0(int* state)
   chassis.halt();
   delay(100);
 
-  
-  
+  chassis.traverse(1);
+  motorL->setSpeed(100);
+  motorR->setSpeed(100);
   bool swc = 1;
+  while(1)
+  {
+    if(sensors.detect_white() == 2)
+    {
+      chassis.manual(100, 1, 1);
+    }
+    else
+    {
+      chassis.manual(100, 100, 1);
+    }
+    delay(1);
+  }
+  
+  swc = 1;
   while(sensors.detect_white() != 2)
   {
     //Serial.print(sensors.detect_white());
@@ -325,26 +359,36 @@ void setup() {
 int state = 0;
 
 void loop() {
-  delay(5000);
-  switch(state){
-    case 0:
-      state0(&state); 
-      break;
-    case 1:
-      state1(&state);
-      break;
-    case 2:
-      state2(&state);
-      break;
-    case 3:
-      state3(&state);
-      break;
-    case 4:
-      state4(&state);
-      break;
-    case 5:
-      state5(&state);
-      break;
+  motorL->setSpeed(50);
+  motorR->setSpeed(50);
+  int swc = 1;
+  while(1){
+  if((sensors.detect_white() == 0) or (sensors.detect_white() == 1))
+  {
+    motorR->run(FORWARD);
   }
-
+  else
+  {
+    motorR->run(BACKWARD);
+    if(swc == 1){
+      motorL->setSpeed(35);
+      motorR->setSpeed(60);
+      swc = 0;
+    }
+  }
+  if((sensors.detect_white() == 0) or (sensors.detect_white() == 2))
+  {
+    motorL->run(FORWARD);
+  }
+  else
+  {
+    motorL->run(BACKWARD);
+    if(swc == 1){
+      motorL->setSpeed(60);
+      motorR->setSpeed(35);
+      swc = 0;
+    }
+  }
+  delay(100);
+  }
 }

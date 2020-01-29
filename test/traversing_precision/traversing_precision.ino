@@ -36,7 +36,7 @@ class chassis {
       motorL->run(FORWARD);
       motorR->run(FORWARD);
       delay(100);
-      motorL->setSpeed(traverse_speed - 6);
+      motorL->setSpeed(traverse_speed - 8);
       motorR->setSpeed(traverse_speed);
     }
     else 

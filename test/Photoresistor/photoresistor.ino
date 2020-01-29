@@ -13,8 +13,8 @@ int power_motorR = 2;
 int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A2;
-int light_sensorL = A3;
-int light_sensorR = A4;
+int light_sensorL = A2;
+int light_sensorR = A3;
 
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 

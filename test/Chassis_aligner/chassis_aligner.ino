@@ -169,7 +169,8 @@ void loop() {
     while(sensors.detect_white() != 3)
     {
       motorR->setSpeed(10);
-      motorR->run(FORWARD);
+      motorL->setSpeed(0);
+      //motorR->run(FORWARD);
     }
     chassis.halt();
   }
@@ -178,7 +179,8 @@ void loop() {
     while(sensors.detect_white() != 3)
     {
       motorL->setSpeed(10);
-      motorL->run(FORWARD);
+      motorR->setSpeed(0);
+      //motorL->run(FORWARD);
     }
     chassis.halt();
   }

@@ -48,6 +48,25 @@ class chassis {
       motorR->setSpeed(traverse_speed);
     }
   }
+  void manual(int speed_L, int speed_R, bool front)
+  {
+    if(front == 1)
+    {
+      motorL->run(FORWARD);
+      motorR->run(FORWARD);
+      delay(100);
+      motorL->setSpeed(speed_L);
+      motorR->setSpeed(speed_R);
+    }
+    else 
+    {
+      motorL->run(BACKWARD);
+      motorR->run(BACKWARD);
+      delay(100);
+      motorL->setSpeed(speed_L);
+      motorR->setSpeed(speed_R);
+    }
+  }
   void rotate(bool right) //if right = 1, turn rightward
   {
     motorL->setSpeed(rotate_speed);
@@ -174,9 +193,24 @@ void state0(int* state)
   chassis.halt();
   delay(100);
 
-  
-  
+  chassis.traverse(1);
+  motorL->setSpeed(100);
+  motorR->setSpeed(100);
   bool swc = 1;
+  while(1)
+  {
+    if(sensors.detect_white() == 2)
+    {
+      chassis.manual(100, 1, 1);
+    }
+    else
+    {
+      chassis.manual(100, 100, 1);
+    }
+    delay(1);
+  }
+  
+  swc = 1;
   while(sensors.detect_white() != 2)
   {
     //Serial.print(sensors.detect_white());
