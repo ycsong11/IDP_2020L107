@@ -1,13 +1,10 @@
 #include <Servo.h>
-<<<<<<< Updated upstream
-=======
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 
 #include "Chassis.h"
 
->>>>>>> Stashed changes
 Servo servo1;
 Servo servo2;
 
@@ -17,69 +14,6 @@ int power_motorL = 3;
 int power_motorR = 4;
 int arm_motor = 5;
 int distance_sensor1 = A1;
-<<<<<<< Updated upstream
-int distance_sensor2 = A2;
-int light_sensorL = A3;
-int light_sensorR = A4;
-
-class chassis {
-  public:
-  int traverse_speed = 50; //pwm of 0-255
-  int rotate_speed = 10; //pwm of 0-255
-  int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
-  void traverse(bool front) //if front = 1, go forward
-  {
-    if(front == 1)
-    {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
-    }
-    else //figure out how to drive motor backwards
-    {
-      analogWrite(power_motorR, -1 * rotate_speed);
-      analogWrite(power_motorL, -1 * rotate_speed);
-    }
-  }
-  void rotate(bool right) //if right = 1, turn rightward
-  {
-    if(right == 1)
-    {
-      analogWrite(power_motorR, -1 * traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
-    }
-    else //figure out how to drive motor backwards
-    {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, -1 * traverse_speed);
-    }
-  }
-  void rotate90(bool right)
-  {
-    if(right == 1)
-    {
-      analogWrite(power_motorR, -1 * traverse_speed);
-      analogWrite(power_motorL, traverse_speed);
-    }
-    else //figure out how to drive motor backwards
-    {
-      analogWrite(power_motorR, traverse_speed);
-      analogWrite(power_motorL, -1 * traverse_speed);
-    }
-    delay(rotate90_duration);
-    digitalWrite(power_motorR, LOW);
-    digitalWrite(power_motorL, LOW);
-  }
-  void halt()
-  {
-    digitalWrite(power_motorR, LOW);
-    digitalWrite(power_motorL, LOW);
-  }
-};
-
-class rescue_arm {
-  public:
-  int motor_power = 50; //pwm of 0-255 TODO:callibrate this
-=======
 int distance_sensor2 = A0;
 int light_sensorL = A2;
 int light_sensorR = A3;
@@ -93,7 +27,6 @@ class rescue_arm
 {
 public:
   int motor_speed = 50; //pwm of 0-255 TODO:callibrate this
->>>>>>> Stashed changes
   int power_at_rest = 10;
   int rescue_arm_duration = 500; //the time before the motor reduces power
   void hold()
@@ -153,11 +86,6 @@ public:
   }
 };
 
-<<<<<<< Updated upstream
-void state0(int* state)
-{
-  //initialize
-=======
 Chassis chassis(power_motorL, power_motorR);
 rescue_arm rescue_arm;
 sensors sensors;
@@ -168,26 +96,11 @@ void state0(int *state)
   //initialize
 
   motor_arm->setSpeed(0);
->>>>>>> Stashed changes
   servo1.write(90);
   servo2.write(90);
   chassis.halt();
   digitalWrite(arm_motor, LOW);
   delay(100);
-<<<<<<< Updated upstream
-  while(sensors.detect_white() != 2)
-  {
-    //if(sensors.detect_white() != 0){//throw color sensor calliration error}
-    chassis.traverse(1);
-  }
-  delay(10);
-  chassis.rotate90(1);
-  delay(10);
-  while(sensors.detect_white() != 3)
-  {
-    //if(sensors.detect_white() != 0){//throw color sensor calliration error}
-    chassis.traverse(1);
-=======
 
   chassis.traverse(1);
   int i = 0;
@@ -239,7 +152,6 @@ void state0(int *state)
 
     delay(1);
     i++;
->>>>>>> Stashed changes
   }
 
   *state = 1;
@@ -247,9 +159,6 @@ void state0(int *state)
 
 void state1(int *state)
 {
-<<<<<<< Updated upstream
-  
-=======
   int location = 3;             //0 = at center, 1 = at left, 2 = at right, 3 = error
   float distance_to_wall = 100; //TODO: callibrate this
   int angle = 80;
@@ -333,7 +242,6 @@ void state1(int *state)
       }
     }
   }
->>>>>>> Stashed changes
 }
 
 void state2(int *state)
@@ -525,18 +433,6 @@ void state5(int *state)
 {
 }
 
-<<<<<<< Updated upstream
-void setup() {
-  // put your setup code here, to run once:
-  servo1.attach(servo_motor1); 
-  servo2.attach(servo_motor2); 
-  pinMode(power_motorL, OUTPUT); 
-  pinMode(power_motorR, OUTPUT); 
-  pinMode(arm_motor, OUTPUT);
-  pinMode(distance_sensor1, INPUT); 
-  pinMode(distance_sensor2, INPUT); 
-  pinMode(light_sensorL, INPUT); 
-=======
 void setup()
 {
   // put your setup code here, to run once:
@@ -545,7 +441,6 @@ void setup()
   pinMode(distance_sensor1, INPUT);
   pinMode(distance_sensor2, INPUT);
   pinMode(light_sensorL, INPUT);
->>>>>>> Stashed changes
   pinMode(light_sensorR, INPUT);
 }
 
@@ -554,34 +449,9 @@ chassis chassis;
 rescue_arm rescue_arm;
 sensors sensors;
 
-<<<<<<< Updated upstream
-void loop() {
-
-  switch(state){
-    case 0:
-      state0(&state); 
-      break;
-    case 1:
-      state1(&state);
-      break;
-    case 2:
-      state2(&state);
-      break;
-    case 3:
-      state3(&state);
-      break;
-    case 4:
-      state4(&state);
-      break;
-    case 5:
-      state5(&state);
-      break;
-  }
-=======
 void loop()
 {
   delay(5000);
->>>>>>> Stashed changes
 
   //state0(&state);
   //state1(&state);
