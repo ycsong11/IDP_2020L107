@@ -1,6 +1,8 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
+
+#include "sample.h"
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 
 Servo servo1;
@@ -13,8 +15,8 @@ int power_motorR = 2;
 int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A2;
-int light_sensorL = A2;
-int light_sensorR = A3;
+int light_sensorL = A3;
+int light_sensorR = A4;
 
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -24,28 +26,22 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 255; //pwm of 0-255
-  int rotate_speed = 100; //pwm of 0-255
-  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
+  int traverse_speed = 50; //pwm of 0-255
+  int rotate_speed = 10; //pwm of 0-255
+  int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
-    motorL->setSpeed(100);
-    motorR->setSpeed(100);
+    motorL->setSpeed(traverse_speed);
+    motorR->setSpeed(traverse_speed);
     if(front == 1)
     {
       motorL->run(FORWARD);
       motorR->run(FORWARD);
-      delay(100);
-      motorL->setSpeed(traverse_speed - 6);
-      motorR->setSpeed(traverse_speed);
     }
     else 
     {
       motorL->run(BACKWARD);
       motorR->run(BACKWARD);
-      delay(100);
-      motorL->setSpeed(traverse_speed - 6);
-      motorR->setSpeed(traverse_speed);
     }
   }
   void rotate(bool right) //if right = 1, turn rightward
@@ -86,12 +82,9 @@ class chassis {
   }
   void halt()
   {
-    motorL->setSpeed(100);
-    motorR->setSpeed(100);
-    delay(100);
     motorL->setSpeed(0);
     motorR->setSpeed(0);
-    //delay(10);
+    delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
   }
@@ -164,15 +157,38 @@ void setup() {
   Serial.begin(9600);
 }
 
+int state = 0;
 
 void loop() {
-//initialize
-  motorL->run(RELEASE);
-  motorR->run(RELEASE);
-  Serial.print(analogRead(light_sensorL));
-  Serial.print("   ");
-  Serial.print(analogRead(light_sensorR));
-  Serial.print("   ");
-  Serial.println(sensors.detect_white());
-  delay(50);
+
+  float threshold = 100; //TODO: callibrate this
+  int angle = 0;
+  sensors.radar_angle(angle);
+  while(angle < 180)
+  {
+    float distance1 = sensors.detect_distance1();
+    float distance2 = sensors.detect_distance2();
+    if ((distance1 < threshold) and (distance2 < threshold))
+    {
+      Serial.println("Close");
+    }
+    else {Serial.println("Far");}
+    sensors.radar_angle(angle);
+    angle++;
+    delay(10);
+  }
+  while(angle > 0)
+  {
+    float distance1 = sensors.detect_distance1();
+    float distance2 = sensors.detect_distance2();
+    if ((distance1 < threshold) and (distance2 < threshold))
+    {
+      Serial.println("Close");
+    }
+    else {Serial.println("Far");}
+    sensors.radar_angle(angle);
+    angle--;
+    delay(10);
+  }
+
 }

@@ -3,16 +3,17 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 
-#include "Chassis.h"
+\#include "Chassis.h"
+
 
 Servo servo1;
 Servo servo2;
 
-int servo_motor1 = 1;
-int servo_motor2 = 2;
-int power_motorL = 3;
-int power_motorR = 4;
-int arm_motor = 5;
+int servo_motor1 = 9;
+int servo_motor2 = 10;
+int power_motorL = 1;
+int power_motorR = 2;
+int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A0;
 int light_sensorL = A2;
@@ -25,21 +26,23 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class rescue_arm
 {
-public:
+
   int motor_speed = 50; //pwm of 0-255 TODO:callibrate this
   int power_at_rest = 10;
   int rescue_arm_duration = 500; //the time before the motor reduces power
   void hold()
   {
-    analogWrite(arm_motor, motor_power);
+    motor_arm->run(FORWARD);
+    motor_arm->setSpeed(motor_speed);
     delay(rescue_arm_duration);
-    analogWrite(arm_motor, power_at_rest);
+    motor_arm->setSpeed(0);
   }
   void relax()
   {
-    analogWrite(arm_motor, -1 * motor_power);
+    motor_arm->run(BACKWARD);
+    motor_arm->setSpeed(motor_speed);
     delay(rescue_arm_duration);
-    digitalWrite(arm_motor, LOW);
+    motor_arm->setSpeed(0);
   }
 };
 
@@ -95,11 +98,11 @@ void state0(int *state)
 {
   //initialize
 
+
   motor_arm->setSpeed(0);
   servo1.write(90);
   servo2.write(90);
   chassis.halt();
-  digitalWrite(arm_motor, LOW);
   delay(100);
 
   chassis.traverse(1);
@@ -151,7 +154,7 @@ void state0(int *state)
     }
 
     delay(1);
-    i++;
+
   }
 
   *state = 1;
@@ -195,6 +198,7 @@ void state1(int *state)
     {
       chassis.traverse(1);
       if ((sensors.detect_distance1() < distance_to_side) and (sensors.detect_distance2() < distance_to_side))
+
       {
         at_left = 1;
         break;
@@ -205,6 +209,7 @@ void state1(int *state)
     {
       chassis.rotate90(0);
       while ((sensors.detect_distance1() > 5) and (sensors.detect_distance2() > 5))
+
       {
         chassis.traverse(1);
       }
@@ -221,6 +226,7 @@ void state1(int *state)
       {
         chassis.traverse(1);
         if ((sensors.detect_distance1() < distance_to_side) and (sensors.detect_distance2() < distance_to_side))
+
         {
           at_right = 1;
           break;
@@ -230,6 +236,7 @@ void state1(int *state)
       {
         chassis.rotate90(0);
         while ((sensors.detect_distance1() > 5) and (sensors.detect_distance2() > 5))
+
         {
           chassis.traverse(1);
         }
@@ -441,17 +448,18 @@ void setup()
   pinMode(distance_sensor1, INPUT);
   pinMode(distance_sensor2, INPUT);
   pinMode(light_sensorL, INPUT);
-  pinMode(light_sensorR, INPUT);
-}
 
+  pinMode(light_sensorR, INPUT);
+  AFMS.begin();
+  Serial.begin(9600);
+}
+*/
 int state = 0;
-chassis chassis;
-rescue_arm rescue_arm;
-sensors sensors;
 
 void loop()
 {
   delay(5000);
+
 
   //state0(&state);
   //state1(&state);

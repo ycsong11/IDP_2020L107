@@ -13,8 +13,8 @@ int power_motorR = 2;
 int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A2;
-int light_sensorL = A2;
-int light_sensorR = A3;
+int light_sensorL = A3;
+int light_sensorR = A4;
 
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -24,28 +24,22 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 255; //pwm of 0-255
-  int rotate_speed = 100; //pwm of 0-255
-  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
+  int traverse_speed = 50; //pwm of 0-255
+  int rotate_speed = 10; //pwm of 0-255
+  int rotate90_duration = 1000; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
-    motorL->setSpeed(100);
-    motorR->setSpeed(100);
+    motorL->setSpeed(traverse_speed);
+    motorR->setSpeed(traverse_speed);
     if(front == 1)
     {
       motorL->run(FORWARD);
       motorR->run(FORWARD);
-      delay(100);
-      motorL->setSpeed(traverse_speed - 6);
-      motorR->setSpeed(traverse_speed);
     }
     else 
     {
       motorL->run(BACKWARD);
       motorR->run(BACKWARD);
-      delay(100);
-      motorL->setSpeed(traverse_speed - 6);
-      motorR->setSpeed(traverse_speed);
     }
   }
   void rotate(bool right) //if right = 1, turn rightward
@@ -86,12 +80,9 @@ class chassis {
   }
   void halt()
   {
-    motorL->setSpeed(100);
-    motorR->setSpeed(100);
-    delay(100);
     motorL->setSpeed(0);
     motorR->setSpeed(0);
-    //delay(10);
+    delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
   }
@@ -164,15 +155,34 @@ void setup() {
   Serial.begin(9600);
 }
 
+int state = 0;
 
 void loop() {
-//initialize
-  motorL->run(RELEASE);
-  motorR->run(RELEASE);
-  Serial.print(analogRead(light_sensorL));
-  Serial.print("   ");
-  Serial.print(analogRead(light_sensorR));
-  Serial.print("   ");
-  Serial.println(sensors.detect_white());
-  delay(50);
+
+  while(sensors.detect_white() != 0)
+  {
+    chassis.traverse(1);
+  }
+  chassis.halt();
+  if(sensors.detect_white() == 1)
+  {
+    while(sensors.detect_white() != 3)
+    {
+      motorR->setSpeed(10);
+      motorL->setSpeed(0);
+      //motorR->run(FORWARD);
+    }
+    chassis.halt();
+  }
+  else if(sensors.detect_white() == 2)
+  {
+    while(sensors.detect_white() != 3)
+    {
+      motorL->setSpeed(10);
+      motorR->setSpeed(0);
+      //motorL->run(FORWARD);
+    }
+    chassis.halt();
+  }
+  while(1){}
 }

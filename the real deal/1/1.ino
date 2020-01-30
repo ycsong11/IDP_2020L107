@@ -26,7 +26,7 @@ class chassis {
   public:
   int traverse_speed = 200; //pwm of 0-255
   int rotate_speed = 100; //pwm of 0-255
-  int rotate90_duration = 2630; //TODO: measure how long to rotate 90 deg
+  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
     motorL->setSpeed(100);
@@ -245,16 +245,16 @@ void state0(int* state)
   int i = 0;
   bool swc = 1;
   delay(2000);
-  while(i<75)
+  while(i<150)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(240, 1);
+      chassis.manual(140, 1);
       delay(2);
     }
     else
     {
-      chassis.manual(240, 255);
+      chassis.manual(140, 150);
     }
     delay(1);
     i++;
@@ -268,15 +268,15 @@ void state0(int* state)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(255, 1);
+      chassis.manual(100, 1);
     }
     else if(sensors.detect_white() == 1)
     {
-      chassis.manual(1, 255);
+      chassis.manual(1, 100);
     }
     else if(sensors.detect_white() == 0)
     {
-      chassis.manual(255, 255);
+      chassis.manual(100, 100);
     }
     else
     {
@@ -427,16 +427,16 @@ void state2(int* state)
   }
   
   int i = 0;
-  while(i<30)
+  while(i<75)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(240, 1);
+      chassis.manual(140, 1);
       delay(2);
     }
     else
     {
-      chassis.manual(240, 255);
+      chassis.manual(120, 150);
     }
     delay(1);
     i++;
@@ -454,7 +454,7 @@ void state2(int* state)
     }
   }*/
   
-  while(i < 40)
+  while(i < 80)
   {
     if((sensors.detect_white() == 2) or (sensors.detect_white() == 3))
     {
@@ -462,7 +462,7 @@ void state2(int* state)
     }
     else
     {
-      chassis.manual(255, 255);
+      chassis.manual(100, 100);
     }
     delay(1);
     i++;
@@ -477,15 +477,15 @@ void state2(int* state)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(255, 1);
+      chassis.manual(200, 1);
     }
     else if(sensors.detect_white() == 1)
     {
-      chassis.manual(1, 255);
+      chassis.manual(1, 200);
     }
     else if(sensors.detect_white() == 0)
     {
-      chassis.manual(255, 255);
+      chassis.manual(200, 200);
     }
     else
     {
@@ -505,7 +505,7 @@ void state3(int* state)
   //chassis.traverse(1);
   int i = 0;
   bool swc = 1;
-  while(i<50)
+  while(i<100)
   {
     if(sensors.detect_white() == 1)
     {
@@ -513,7 +513,7 @@ void state3(int* state)
     }
     else
     {
-      chassis.manual(255, 255);
+      chassis.manual(140, 140);
     }
     delay(1);
     i++;
@@ -527,15 +527,15 @@ void state3(int* state)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(255, 1);
+      chassis.manual(200, 1);
     }
     else if(sensors.detect_white() == 1)
     {
-      chassis.manual(1, 255);
+      chassis.manual(1, 200);
     }
     else if(sensors.detect_white() == 0)
     {
-      chassis.manual(255, 255);
+      chassis.manual(200, 200);
     }
     else
     {
@@ -575,33 +575,21 @@ void setup() {
 int state = 0;
 
 void loop() {
-  
+  /*
   delay(5000);
   //state2(&state);
   while(1){
   chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
+  delay(10000);
   chassis.halt();
   delay(1000);
   chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
+  delay(10000);
   chassis.halt();
   delay(1000);
-  }
+  }*/
   delay(5000);
-  /*
+  
   state0(&state);
   delay(2000);
   chassis.traverse(1);
@@ -614,16 +602,13 @@ void loop() {
   chassis.rotate90(1);
   chassis.rotate90(1);
   state3(&state);
-   while(1){}
   delay(2000);
   chassis.traverse(1);
   delay(2000);
   chassis.halt();
   chassis.rotate90(1);
-  chassis.rotate90(1);
- 
-  }
-  while(1){}*/
+  chassis.rotate90(1);}
+  while(1){}
   /*
   switch(state){
     case 0:

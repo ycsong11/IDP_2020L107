@@ -13,8 +13,8 @@ int power_motorR = 2;
 int arm_motor = 3;
 int distance_sensor1 = A1;
 int distance_sensor2 = A2;
-int light_sensorL = A2;
-int light_sensorR = A3;
+int light_sensorL = A3;
+int light_sensorR = A4;
 
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -164,15 +164,32 @@ void setup() {
   Serial.begin(9600);
 }
 
+int state = 0;
 
 void loop() {
-//initialize
-  motorL->run(RELEASE);
-  motorR->run(RELEASE);
-  Serial.print(analogRead(light_sensorL));
-  Serial.print("   ");
-  Serial.print(analogRead(light_sensorR));
-  Serial.print("   ");
-  Serial.println(sensors.detect_white());
-  delay(50);
+  
+  delay(5000);
+  chassis.traverse(1);
+  delay(5400);
+  chassis.halt();
+  chassis.rotate90(1);
+  chassis.traverse(1);
+  delay(5000);
+  chassis.halt();
+  chassis.traverse(1);
+  delay(3000);
+  chassis.halt();
+  chassis.traverse(0);
+  delay(2000);
+  chassis.halt();
+  chassis.rotate90(1);
+  chassis.rotate90(1);
+  chassis.traverse(1);
+  delay(6000);
+  chassis.halt();
+  chassis.rotate(1);
+  chassis.traverse(1);
+  delay(5400);
+  chassis.halt();
+  
 }

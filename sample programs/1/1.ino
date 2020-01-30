@@ -24,9 +24,9 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class chassis {
   public:
-  int traverse_speed = 200; //pwm of 0-255
+  int traverse_speed = 255; //pwm of 0-255
   int rotate_speed = 100; //pwm of 0-255
-  int rotate90_duration = 2630; //TODO: measure how long to rotate 90 deg
+  int rotate90_duration = 2675; //TODO: measure how long to rotate 90 deg
   void traverse(bool front) //if front = 1, go forward
   {
     motorL->setSpeed(100);
@@ -36,7 +36,7 @@ class chassis {
       motorL->run(FORWARD);
       motorR->run(FORWARD);
       delay(100);
-      motorL->setSpeed(traverse_speed + 5);
+      motorL->setSpeed(traverse_speed - 8);
       motorR->setSpeed(traverse_speed);
     }
     else 
@@ -44,34 +44,28 @@ class chassis {
       motorL->run(BACKWARD);
       motorR->run(BACKWARD);
       delay(100);
-      motorL->setSpeed(traverse_speed + 7);
+      motorL->setSpeed(traverse_speed - 6);
       motorR->setSpeed(traverse_speed);
     }
   }
-  void manual(int speed_L, int speed_R)
+  void manual(int speed_L, int speed_R, bool front)
   {
-
-      if(speed_L >= 0)
-      {
-        motorL->run(FORWARD);
-      }
-      else
-      {
-        motorL->run(BACKWARD);
-      }
-      if(speed_R >= 0)
-      {
-        motorR->run(FORWARD);
-      }
-      else
-      {
-        motorR->run(BACKWARD);
-      }
+    if(front == 1)
+    {
+      motorL->run(FORWARD);
+      motorR->run(FORWARD);
       delay(100);
       motorL->setSpeed(speed_L);
       motorR->setSpeed(speed_R);
-    
-    
+    }
+    else 
+    {
+      motorL->run(BACKWARD);
+      motorR->run(BACKWARD);
+      delay(100);
+      motorL->setSpeed(speed_L);
+      motorR->setSpeed(speed_R);
+    }
   }
   void rotate(bool right) //if right = 1, turn rightward
   {
@@ -103,48 +97,6 @@ class chassis {
       motorR->run(FORWARD);
     }
     delay(rotate90_duration);
-    motorL->setSpeed(0);
-    motorR->setSpeed(0);
-    delay(10);
-    motorL->run(RELEASE);
-    motorR->run(RELEASE);
-  }
-  void rotate45(bool right)
-  {
-    motorL->setSpeed(rotate_speed);
-    motorR->setSpeed(rotate_speed);
-    if(right == 1)
-    {
-      motorL->run(FORWARD);
-      motorR->run(BACKWARD);
-    }
-    else //figure out how to drive motor backwards
-    {
-      motorL->run(BACKWARD);
-      motorR->run(FORWARD);
-    }
-    delay(rotate90_duration/2);
-    motorL->setSpeed(0);
-    motorR->setSpeed(0);
-    delay(10);
-    motorL->run(RELEASE);
-    motorR->run(RELEASE);
-  }
-  void rotate10(bool right)
-  {
-    motorL->setSpeed(rotate_speed);
-    motorR->setSpeed(rotate_speed);
-    if(right == 1)
-    {
-      motorL->run(FORWARD);
-      motorR->run(BACKWARD);
-    }
-    else //figure out how to drive motor backwards
-    {
-      motorL->run(BACKWARD);
-      motorR->run(FORWARD);
-    }
-    delay(rotate90_duration/9);
     motorL->setSpeed(0);
     motorR->setSpeed(0);
     delay(10);
@@ -242,52 +194,46 @@ void state0(int* state)
   delay(100);
 
   chassis.traverse(1);
-  int i = 0;
+  motorL->setSpeed(100);
+  motorR->setSpeed(100);
   bool swc = 1;
-  delay(2000);
-  while(i<75)
-  {
-    if(sensors.detect_white() == 2)
-    {
-      chassis.manual(240, 1);
-      delay(2);
-    }
-    else
-    {
-      chassis.manual(240, 255);
-    }
-    delay(1);
-    i++;
-  }
-/*
-  motorL->setSpeed(50);
-  motorR->setSpeed(50);*/
-  //int swc = 1;
-
   while(1)
   {
     if(sensors.detect_white() == 2)
     {
-      chassis.manual(255, 1);
-    }
-    else if(sensors.detect_white() == 1)
-    {
-      chassis.manual(1, 255);
-    }
-    else if(sensors.detect_white() == 0)
-    {
-      chassis.manual(255, 255);
+      chassis.manual(100, 1, 1);
     }
     else
     {
-      chassis.manual(0, 0);
-      break;
+      chassis.manual(100, 100, 1);
     }
-    
     delay(1);
-    i++;
   }
   
+  swc = 1;
+  while(sensors.detect_white() != 2)
+  {
+    //Serial.print(sensors.detect_white());
+    //if(sensors.detect_white() != 0){//throw color sensor calliration error}
+    if(swc == 1){
+    chassis.traverse(1);}
+    swc = 0;
+    delay(1);
+  }
+  delay(500);
+  chassis.halt();
+  delay(200);
+  chassis.rotate90(1);
+  delay(10);
+  swc = 1;
+  while(sensors.detect_white() != 3)
+  {
+    if(swc == 1){
+    chassis.traverse(1);}
+    swc = 0;
+    delay(1);
+  }
+  chassis.halt();
   *state = 1;
 }
 
@@ -380,174 +326,12 @@ void state1(int* state)
 
 void state2(int* state)
 {
-  //chassis.traverse(1);
-  int cnt = 0;
-  int swc = 1;
-  motorL->setSpeed(50);
-  motorR->setSpeed(50);
-  while(cnt < 70){
-  if((sensors.detect_white() == 0) or (sensors.detect_white() == 1))
-  {
-    motorR->run(FORWARD);
-  }
-  else
-  {
-    motorR->run(BACKWARD);
-    if(swc == 1){
-      motorL->setSpeed(35);
-      motorR->setSpeed(60);
-      swc = 0;
-    }
-  }
-  if((sensors.detect_white() == 0) or (sensors.detect_white() == 2))
-  {
-    motorL->run(FORWARD);
-  }
-  else
-  {
-    motorL->run(BACKWARD);
-    if(swc == 1){
-      motorL->setSpeed(60);
-      motorR->setSpeed(35);
-      swc = 0;
-    }
-  }
-  delay(100);
-  cnt++;
-  }
-  chassis.halt();
-  chassis.traverse(1);
-  bool swc1 = 0;
-  bool swc2 = 0;
   
-  while(swc2 == 0)
-  {
-    if(sensors.detect_white() == 3){swc1 = 1;}
-    if((sensors.detect_white() == 0) and (swc1 == 1)){swc2 = 1;}
-  }
-  
-  int i = 0;
-  while(i<30)
-  {
-    if(sensors.detect_white() == 2)
-    {
-      chassis.manual(240, 1);
-      delay(2);
-    }
-    else
-    {
-      chassis.manual(240, 255);
-    }
-    delay(1);
-    i++;
-  }
-  i = 0;
-  //chassis.rotate45(1);
-  //chassis.manual(140, 150);
-  /*
-  while(1)
-  {
-    if(sensors.detect_white() == 2)
-    {
-      chassis.rotate45(1);
-      break;
-    }
-  }*/
-  
-  while(i < 40)
-  {
-    if((sensors.detect_white() == 2) or (sensors.detect_white() == 3))
-    {
-      chassis.rotate10(1);
-    }
-    else
-    {
-      chassis.manual(255, 255);
-    }
-    delay(1);
-    i++;
-  }
-  //while(1){chassis.halt();}
-/*
-  motorL->setSpeed(50);
-  motorR->setSpeed(50);*/
-  //int swc = 1;
-
-  while(1)//i < 50)
-  {
-    if(sensors.detect_white() == 2)
-    {
-      chassis.manual(255, 1);
-    }
-    else if(sensors.detect_white() == 1)
-    {
-      chassis.manual(1, 255);
-    }
-    else if(sensors.detect_white() == 0)
-    {
-      chassis.manual(255, 255);
-    }
-    else
-    {
-      chassis.manual(0, 0);
-      break;
-    }
-    
-    delay(1);
-    i++;
-  }
-  
-  *state = 3;
 }
 
 void state3(int* state)
 {
-  //chassis.traverse(1);
-  int i = 0;
-  bool swc = 1;
-  while(i<50)
-  {
-    if(sensors.detect_white() == 1)
-    {
-      chassis.rotate10(0);
-    }
-    else
-    {
-      chassis.manual(255, 255);
-    }
-    delay(1);
-    i++;
-  }
-/*
-  motorL->setSpeed(50);
-  motorR->setSpeed(50);*/
-  //int swc = 1;
-
-  while(1)
-  {
-    if(sensors.detect_white() == 2)
-    {
-      chassis.manual(255, 1);
-    }
-    else if(sensors.detect_white() == 1)
-    {
-      chassis.manual(1, 255);
-    }
-    else if(sensors.detect_white() == 0)
-    {
-      chassis.manual(255, 255);
-    }
-    else
-    {
-      chassis.manual(0, 0);
-      break;
-    }
-    
-    delay(1);
-    i++;
-  }
   
-  *state = 1;
 }
 
 void state4(int* state)
@@ -575,56 +359,7 @@ void setup() {
 int state = 0;
 
 void loop() {
-  
   delay(5000);
-  //state2(&state);
-  while(1){
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.halt();
-  delay(1000);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.rotate90(0);
-  chassis.halt();
-  delay(1000);
-  }
-  delay(5000);
-  /*
-  state0(&state);
-  delay(2000);
-  chassis.traverse(1);
-  delay(2000);
-  chassis.halt();
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  while(1){
-  state2(&state);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  state3(&state);
-   while(1){}
-  delay(2000);
-  chassis.traverse(1);
-  delay(2000);
-  chassis.halt();
-  chassis.rotate90(1);
-  chassis.rotate90(1);
- 
-  }
-  while(1){}*/
-  /*
   switch(state){
     case 0:
       state0(&state); 
@@ -644,6 +379,6 @@ void loop() {
     case 5:
       state5(&state);
       break;
-  }*/
+  }
 
 }
