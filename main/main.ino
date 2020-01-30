@@ -3,8 +3,7 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 
-\#include "Chassis.h"
-
+#include "Chassis.h"
 
 Servo servo1;
 Servo servo2;
@@ -26,7 +25,6 @@ Adafruit_DCMotor *motor_arm = AFMS.getMotor(arm_motor);
 
 class rescue_arm
 {
-
   int motor_speed = 50; //pwm of 0-255 TODO:callibrate this
   int power_at_rest = 10;
   int rescue_arm_duration = 500; //the time before the motor reduces power
@@ -97,14 +95,11 @@ unsigned long start_time;
 void state0(int *state)
 {
   //initialize
-
-
   motor_arm->setSpeed(0);
   servo1.write(90);
   servo2.write(90);
   chassis.halt();
   delay(100);
-
   chassis.traverse(1);
   int i = 0;
   bool swc = 1;
@@ -129,7 +124,6 @@ void state0(int *state)
   motorL->setSpeed(50);
   motorR->setSpeed(50);*/
   //int swc = 1;
-
   while (1)
   {
     if (sensors.detect_white() == 2)
@@ -152,11 +146,8 @@ void state0(int *state)
       chassis.manual(0, 0);
       break;
     }
-
     delay(1);
-
   }
-
   *state = 1;
 }
 
@@ -209,7 +200,6 @@ void state1(int *state)
     {
       chassis.rotate90(0);
       while ((sensors.detect_distance1() > 5) and (sensors.detect_distance2() > 5))
-
       {
         chassis.traverse(1);
       }
@@ -226,7 +216,6 @@ void state1(int *state)
       {
         chassis.traverse(1);
         if ((sensors.detect_distance1() < distance_to_side) and (sensors.detect_distance2() < distance_to_side))
-
         {
           at_right = 1;
           break;
@@ -236,7 +225,6 @@ void state1(int *state)
       {
         chassis.rotate90(0);
         while ((sensors.detect_distance1() > 5) and (sensors.detect_distance2() > 5))
-
         {
           chassis.traverse(1);
         }
@@ -295,7 +283,6 @@ void state2(int *state)
   chassis.traverse(1);
   bool swc1 = 0;
   bool swc2 = 0;
-
   while (swc2 == 0)
   {
     if (sensors.detect_white() == 3)
@@ -307,7 +294,6 @@ void state2(int *state)
       swc2 = 1;
     }
   }
-
   int i = 0;
   while (i < 30)
   {
@@ -374,11 +360,9 @@ void state2(int *state)
       chassis.manual(0, 0);
       break;
     }
-
     delay(1);
     i++;
   }
-
   *state = 3;
 }
 
@@ -453,13 +437,12 @@ void setup()
   AFMS.begin();
   Serial.begin(9600);
 }
-*/
+
 int state = 0;
 
 void loop()
 {
   delay(5000);
-
 
   //state0(&state);
   //state1(&state);
