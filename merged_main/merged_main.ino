@@ -214,6 +214,29 @@ public:
     cm = roundf(cm);
     return cm;
   }
+
+  void radar_angle(int angle) //TODO: test this
+  {
+    servo1.write(angle);
+  }
+
+  float reference_distance(float time, int rotate90_duration)
+  {
+    float pi = 3.14159265358979323846;
+    float radian_per_ms = pi / 2 / rotate90_duration;
+    float radian = radian_per_ms * radian_per_ms;
+    float centre_to_sensor = 17.0;
+    float half_width = 120.0;
+    float depth = 92.0;
+    if (radian < 0.9167)
+    {
+      return (depth / cos(radian) - centre_to_sensor);
+    }
+    else
+    {
+      return (half_width / cos(pi / 2 - radian) - centre_to_sensor);
+    }
+  }
 };
 
 class RescueArm
@@ -299,6 +322,7 @@ void state0(int *state)
 }
 
 void state1(int *state)
+
 {
   int location = 3;             //0 = at center, 1 = at left, 2 = at right, 3 = error
   float distance_to_wall = 100; //TODO: callibrate this
@@ -384,6 +408,85 @@ void state1(int *state)
       }
     }
   }
+}
+
+void approach1()
+{
+  // approach 1 - scan the region by rotating the robot
+  sensors.radar_angle(90);
+  chassis.rotate(1);
+  start_time = millis();
+  while ((millis() - start_time < chassis.rotate90_duration))
+  {
+    float diff = sensors.reference_distance((millis() - start_time), chassis.rotate90_duration) - sensors.detect_distance1();
+    if (diff > 20)
+    {
+      chassis.halt();
+      break;
+    }
+  }
+}
+
+void approach2()
+{
+  // approach 2 - detect the victim sideways by cruising
+  sensors.radar_angle(90);
+  bool swc = 0; // 1 if there's a victim in the front
+  for (int angle = 80; angle < 100; angle++)
+  {
+    float diff = 120.0 - sensors.detect_distance1();
+    if (diff > 20)
+    {
+      chassis.rotate90(0);
+      chassis.traverse(0);
+      delay(2000);
+      chassis.halt();
+      swc = 1;
+      break;
+    }
+  }
+  sensors.radar_angle(180);
+  chassis.manual(50, 50);
+  start_time = millis();
+  float record_time1 = 10000; // default value is the max time duration
+  while (millis() - start_time < record_time1)
+  {
+    if (sensors.detect_distance1() < 100)
+    {
+      record_time1 = millis() - start_time;
+      delay(500);
+      chassis.halt();
+      break;
+    }
+  }
+  chassis.rotate90(1);
+  sensors.radar_angle(90);
+  start_time = millis();
+  chassis.traverse(1);
+  float record_time2 = 10000;
+  while(millis()-start_time < record_time2)
+  {
+    if (sensors.detect_distance1()<20)
+    {
+      delay(500);
+      record_time2 = millis() - start_time;
+      chassis.halt();
+      break;
+    }
+  }
+  delay(5000); // time for LED reactions
+  rescue_arm.hold();
+  delay(1000);
+  chassis.rotate90(1);
+  chassis.rotate90(1);
+  chassis.traverse(1);
+  delay(record_time2);
+  chassis.halt();
+  chassis.rotate90(0);
+  chassis.manual(50, 50);
+  delay(record_time1);
+  chassis.halt();
+
 }
 
 void state2(int *state)
@@ -589,7 +692,7 @@ int state = 0;
 
 void loop()
 {
-  delay(1000);
+  delay(3000);
   /*
   delay(3000);
   state0(&state);
@@ -601,7 +704,5 @@ void loop()
   chassis.rotate90(1);
   state2(&state);
   */
-  rescue_arm.hold();
-  delay(1000);
-  rescue_arm.relax();
+  approach1();
 }
