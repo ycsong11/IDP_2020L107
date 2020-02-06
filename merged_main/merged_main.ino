@@ -11,8 +11,8 @@ int servo_motor2 = 10;
 int power_motorL = 1;
 int power_motorR = 2;
 int arm_motor = 4;
-int distance_sensor1 = A1;
-int distance_sensor2 = A0;
+int distance_sensor1 = A0;
+int distance_sensor2 = A1;
 int light_sensorL = A2;
 int light_sensorR = A3;
 
@@ -26,7 +26,8 @@ class Chassis
 public:
   int traverse_speed = 200; //pwm of 0-255
   int rotate_speed = 100;   //pwm of 0-255
-  int rotate90_duration = 2630;
+  int rotate90_duration = 2725;
+  int scan90_duration = 6000;
 
   void traverse(bool front)
   {
@@ -135,10 +136,10 @@ public:
     motorR->run(RELEASE);
   }
 
-  void rotate10(bool right)
+  void scan90(bool right)
   {
-    motorL->setSpeed(rotate_speed);
-    motorR->setSpeed(rotate_speed);
+    motorL->setSpeed(50);
+    motorR->setSpeed(50);
     if (right == 1)
     {
       motorL->run(FORWARD);
@@ -149,7 +150,7 @@ public:
       motorL->run(BACKWARD);
       motorR->run(FORWARD);
     }
-    delay(rotate90_duration / 9);
+    delay(scan90_duration);
     motorL->setSpeed(0);
     motorR->setSpeed(0);
     delay(10);
@@ -220,11 +221,11 @@ public:
     servo1.write(angle / 1.4 + 170 / 2 + 10); // reduction ratio = 1.5
   }
 
-  float reference_distance(float time, int rotate90_duration)
+  float reference_distance(float time, int scan90_duration)
   {
     float pi = 3.14159265358979323846;
-    float radian_per_ms = pi / 2 / rotate90_duration;
-    float radian = radian_per_ms * radian_per_ms;
+    float radian_per_ms = pi / 2 / scan90_duration;
+    float radian = time * radian_per_ms;
     float centre_to_sensor = 17.0;
     float half_width = 120.0;
     float depth = 92.0;
@@ -413,19 +414,32 @@ void state1(int *state)
 void approach1()
 {
   // approach 1 - scan the region by rotating the robot
+  float accu = 0;
+  int count = 0;
   chassis.rotate(0);
-  start_time = millis();
+  float start_time = millis();
   while ((millis() - start_time < chassis.rotate90_duration))
   {
     float diff = sensors.reference_distance((millis() - start_time), chassis.rotate90_duration) - sensors.detect_distance1();
+    /*
     Serial.print("Ref: ");
     Serial.println(sensors.reference_distance((millis() - start_time), chassis.rotate90_duration));
     Serial.print("Actual: ");
     Serial.println(sensors.detect_distance1());
-    if (diff > 20)
+    */
+    accu += diff;
+    count += 1;
+    if (count == 2)
     {
-      chassis.halt();
-      break;
+      if (accu > 80)
+      {
+        chassis.halt();
+        chassis.manual(50,-50);
+        delay(100);
+        break;
+      }
+      count = 0;
+      accu = 0;
     }
   }
 }
@@ -578,7 +592,7 @@ void state2(int *state)
   {
     if ((sensors.detect_white() == 2) or (sensors.detect_white() == 3))
     {
-      chassis.rotate10(1);
+      chassis.rotate90(1);
     }
     else
     {
@@ -627,7 +641,7 @@ void state3(int *state)
   {
     if (sensors.detect_white() == 1)
     {
-      chassis.rotate10(0);
+      chassis.rotate90(0);
     }
     else
     {
@@ -694,23 +708,25 @@ int state = 0;
 
 void loop()
 {
-  bool swc = 0;
+  bool swc = 1;
   if (swc)
   {
     delay(3000);
   }
+  approach1();
   /*
-  delay(3000);
-  state0(&state);
-  //state1(&state);
-  delay(2000);
-  chassis.manual(100, 100);
-  delay(1500);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  state2(&state);
+  while (1)
+  {
+    Serial.print("\nReading: ");
+    Serial.print(analogRead(distance_sensor1));
+    Serial.print("\nConversion: ");
+    Serial.print(sensors.detect_distance1());
+    delay(500);
+  }
   */
-
-  Serial.println(sensors.detect_distance1());
-  delay(500);
+  swc == 0;
+  chassis.halt();
+  while (1)
+  {
+  }
 }
