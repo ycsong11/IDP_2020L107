@@ -201,8 +201,8 @@ public:
 
   float detect_distance1()
   {
-    float sensorValue = analogRead(distance1);
-    float cm = 10650.08 * pow(sensorValue, -0.935) - 10;
+    float x = analogRead(distance1);
+    float cm = -0.00000177 * pow(x, 3) + 0.002202 * pow(x, 2) - 0.9961 * x + 187.5; // -1.77e-06 x^3 + 0.002202 x^2 - 0.9961 x + 187.5
     cm = roundf(cm);
     return cm;
   }
@@ -215,9 +215,9 @@ public:
     return cm;
   }
 
-  void radar_angle(int angle) //TODO: test this
+  void radar_angle(int angle) // positive: sensor face right
   {
-    servo1.write(angle);
+    servo1.write(angle / 1.4 + 170 / 2 + 10); // reduction ratio = 1.5
   }
 
   float reference_distance(float time, int rotate90_duration)
@@ -246,7 +246,7 @@ public:
   int power_at_rest = 10;
   int rescue_arm_duration = 3000;
 
-  void RescueArm::hold()
+  void hold()
   {
     motor_arm->run(FORWARD);
     motor_arm->setSpeed(motor_speed);
@@ -254,7 +254,7 @@ public:
     motor_arm->setSpeed(0);
   }
 
-  void RescueArm::relax()
+  void relax()
   {
     motor_arm->run(BACKWARD);
     motor_arm->setSpeed(motor_speed);
@@ -413,12 +413,15 @@ void state1(int *state)
 void approach1()
 {
   // approach 1 - scan the region by rotating the robot
-  sensors.radar_angle(90);
-  chassis.rotate(1);
+  chassis.rotate(0);
   start_time = millis();
   while ((millis() - start_time < chassis.rotate90_duration))
   {
     float diff = sensors.reference_distance((millis() - start_time), chassis.rotate90_duration) - sensors.detect_distance1();
+    Serial.print("Ref: ");
+    Serial.println(sensors.reference_distance((millis() - start_time), chassis.rotate90_duration));
+    Serial.print("Actual: ");
+    Serial.println(sensors.detect_distance1());
     if (diff > 20)
     {
       chassis.halt();
@@ -435,7 +438,7 @@ void approach2()
   for (int angle = 80; angle < 100; angle++)
   {
     float diff = 120.0 - sensors.detect_distance1();
-    if (diff > 20)
+    if (diff > 800)
     {
       chassis.rotate90(0);
       chassis.traverse(0);
@@ -464,9 +467,9 @@ void approach2()
   start_time = millis();
   chassis.traverse(1);
   float record_time2 = 10000;
-  while(millis()-start_time < record_time2)
+  while (millis() - start_time < record_time2)
   {
-    if (sensors.detect_distance1()<20)
+    if (sensors.detect_distance1() < 20)
     {
       delay(500);
       record_time2 = millis() - start_time;
@@ -486,7 +489,6 @@ void approach2()
   chassis.manual(50, 50);
   delay(record_time1);
   chassis.halt();
-
 }
 
 void state2(int *state)
@@ -692,7 +694,11 @@ int state = 0;
 
 void loop()
 {
-  delay(3000);
+  bool swc = 0;
+  if (swc)
+  {
+    delay(3000);
+  }
   /*
   delay(3000);
   state0(&state);
@@ -704,5 +710,7 @@ void loop()
   chassis.rotate90(1);
   state2(&state);
   */
-  approach1();
+
+  Serial.println(sensors.detect_distance1());
+  delay(500);
 }

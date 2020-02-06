@@ -201,16 +201,8 @@ public:
 
   float detect_distance1()
   {
-    float sensorValue = analogRead(distance1);
-    float cm = 10650.08 * pow(sensorValue, -0.935) - 10;
-    cm = roundf(cm);
-    return cm;
-  }
-
-  float detect_distance2()
-  {
-    float sensorValue = analogRead(distance2);
-    float cm = 10650.08 * pow(sensorValue, -0.935) - 10;
+    float x = analogRead(distance1);
+    float cm = -0.00000177 * x ^ 3 + 0.002202 * x ^ 2 - 0.9961 * x + 187.5; // -1.77e-06 x^3 + 0.002202 x^2 - 0.9961 x + 187.5
     cm = roundf(cm);
     return cm;
   }
