@@ -1,3 +1,4 @@
+
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
@@ -15,6 +16,7 @@ int distance_sensor1 = A1;
 int distance_sensor2 = A0;
 int light_sensorL = A2;
 int light_sensorR = A3;
+int LED = 11;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *motorL = AFMS.getMotor(power_motorL);
@@ -32,6 +34,7 @@ public:
   uint8_t backward = FORWARD;
   void traverse(bool front) //if front = 1, go forward
   {
+    digitalWrite(LED, HIGH);
     motorL->setSpeed(100);
     motorR->setSpeed(100);
     if (front == 1)
@@ -53,7 +56,7 @@ public:
   }
   void manual(int speed_L, int speed_R)
   {
-
+    digitalWrite(LED, HIGH);
     if (speed_L >= 0)
     {
       motorL->run(forward);
@@ -80,6 +83,7 @@ public:
   }
   void rotate(bool right) //if right = 1, turn rightward
   {
+    digitalWrite(LED, HIGH);
     motorL->setSpeed(rotate_speed);
     motorR->setSpeed(rotate_speed);
     if (right == 1)
@@ -95,6 +99,7 @@ public:
   }
   void rotate90(bool right)
   {
+    digitalWrite(LED, HIGH);
     motorL->setSpeed(rotate_speed);
     motorR->setSpeed(rotate_speed);
     if (right == 1)
@@ -113,9 +118,11 @@ public:
     delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
+    digitalWrite(LED, LOW);
   }
   void rotate45(bool right)
   {
+    digitalWrite(LED, HIGH);
     motorL->setSpeed(rotate_speed);
     motorR->setSpeed(rotate_speed);
     if (right == 1)
@@ -134,9 +141,11 @@ public:
     delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
+    digitalWrite(LED, LOW);
   }
   void rotate10(bool right)
   {
+    digitalWrite(LED, HIGH);
     motorL->setSpeed(rotate_speed);
     motorR->setSpeed(rotate_speed);
     if (right == 1)
@@ -155,28 +164,9 @@ public:
     delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
+    digitalWrite(LED, LOW);
   }
-  void scan90(bool right)
-  {
-    motorL->setSpeed(50);
-    motorR->setSpeed(50);
-    if (right == 1)
-    {
-      motorL->run(FORWARD);
-      motorR->run(BACKWARD);
-    }
-    else //figure out how to drive motor backwards
-    {
-      motorL->run(BACKWARD);
-      motorR->run(FORWARD);
-    }
-    delay(scan90_duration);
-    motorL->setSpeed(0);
-    motorR->setSpeed(0);
-    delay(10);
-    motorL->run(RELEASE);
-    motorR->run(RELEASE);
-  }
+
   void halt()
   {
     motorL->setSpeed(100);
@@ -187,6 +177,7 @@ public:
     //delay(10);
     motorL->run(RELEASE);
     motorR->run(RELEASE);
+    digitalWrite(LED, LOW);
   }
 };
 
@@ -276,7 +267,7 @@ public:
   {
     motor_arm->run(FORWARD);
     motor_arm->setSpeed(motor_speed);
-    delay(rescue_arm_duration - 850);
+    delay(rescue_arm_duration - 500);
     motor_arm->setSpeed(0);
   }
 };
@@ -284,7 +275,6 @@ public:
 Chassis chassis;
 Sensors sensors;
 RescueArm rescue_arm;
-unsigned long start_time;
 
 void state0(int *state)
 {
@@ -341,6 +331,8 @@ void state0(int *state)
     delay(1);
     i++;
   }
+  chassis.traverse(1);
+  delay(750);
 
   *state = 1;
 }
@@ -354,6 +346,7 @@ void state2(int *state)
   //chassis.traverse(1);
   int cnt = 0;
   int swc = 1;
+  /*
   motorL->setSpeed(50);
   motorR->setSpeed(50);
   while (cnt < 70)
@@ -392,7 +385,8 @@ void state2(int *state)
   chassis.halt();
   chassis.traverse(1);
   delay(500); //to move the chassis beyond line
-
+*/
+  chassis.traverse(1);
   while (!((sensors.detect_white() == 2) or (sensors.detect_white() == 3)))
   {
     motorL->setSpeed(0);
@@ -469,6 +463,12 @@ void state2(int *state)
     delay(1);
     i++;
   }
+  chassis.halt();
+  rescue_arm.relax();
+  chassis.traverse(0);
+  delay(1000);
+  chassis.rotate90(1);
+  chassis.rotate90(1);
 
   *state = 3;
 }
@@ -519,6 +519,8 @@ void state3(int *state)
     delay(1);
     i++;
   }
+  chassis.traverse(1);
+  delay(750);
 
   *state = 1;
 }
@@ -564,34 +566,65 @@ void state4(int *state)
   *state = 1;
 }
 
-void approach1()
+int victim_search(int step)
 {
   // approach 1 - scan the region by rotating the robot
+  // step 0 - search left
+  // step 1 - search right
+  // step 2 - travel back
+  if (step == 2) // travel back
+  {
+    chassis.traverse(1);
+    delay(500);
+    chassis.rotate90(1);
+    delay(500);
+    chassis.rotate90(1);
+    delay(500);
+    chassis.traverse(1);
+    delay(750);
+    chassis.halt();
+    return 0;
+  }
+  if (step == 3)
+  {
+    chassis.traverse(1);
+    delay(500);
+    chassis.rotate(1);
+    delay(chassis.rotate90_duration * 2 + 500);
+    chassis.traverse(1);
+    delay(300);
+    chassis.halt();
+    return 0;
+  }
+  // starting from motors aligning with T shape line
   float accu = 0;
   int count = 0;
   bool detected = 0;
-  chassis.rotate(0);
-  float start_time = millis();
+  int speed_diff = 10; //compensate robot offset
+  if (step == 0)
+  {
+    chassis.rotate(0);
+  }
+  else
+  {
+    chassis.rotate(1);
+  }
+
+  unsigned long start_time = millis();
   int rotate_time = 0;
-  while ((millis() - start_time < chassis.rotate90_duration))
+  while ((millis() - start_time < chassis.rotate90_duration)) // rotate 90 deg
   {
     float diff = sensors.reference_distance((millis() - start_time), chassis.rotate90_duration) - sensors.detect_distance1();
-    /*
-    Serial.print("Ref: ");
-    Serial.println(sensors.reference_distance((millis() - start_time), chassis.rotate90_duration));
-    Serial.print("Actual: ");
-    Serial.println(sensors.detect_distance1());
-    */
     accu += diff;
     count += 1;
-    if (count == 2)
+    if (count == 2) // compare 2 readings with threshold
     {
-      if (accu > 80)
+      if (accu > 80) // victim detected
       {
         detected = 1;
         chassis.halt();
         rotate_time = millis() - start_time;
-        delay(750);
+        delay(500);
         break;
       }
       else
@@ -604,12 +637,20 @@ void approach1()
 
   if (detected)
   {
-    int start_time = millis();
-    chassis.manual(chassis.traverse_speed + 5, chassis.traverse_speed);
     float accu_ = 0;
     int count_ = 0;
+    int max_traverse_time = 5500;
+    if (step == 0)
+    {
+      chassis.manual(chassis.traverse_speed + speed_diff, chassis.traverse_speed); // compensate - robot have left offset, left motor runs faster
+    }
+    else
+    {
+      chassis.manual(chassis.traverse_speed, chassis.traverse_speed); // compensate - robot have right offset, right motor runs faster
+    }
     int traverse_time = 0;
-    while (millis() - start_time < 7500)
+    unsigned long start_time = millis();
+    while ((millis() - start_time) < max_traverse_time)
     {
       count_ += 1;
       accu_ += sensors.detect_distance1();
@@ -619,7 +660,7 @@ void approach1()
         {
           traverse_time = millis() - start_time;
           chassis.halt();
-          delay(750);
+          delay(500);
           break;
         }
         else
@@ -629,99 +670,96 @@ void approach1()
         }
       }
     }
-    if (traverse_time > 0) // victime detected again
+    if (traverse_time > 0) // victim detected again
     {
-      chassis.manual(chassis.traverse_speed + 5, chassis.traverse_speed);
-      delay(2000);
-      chassis.halt();
-      delay(3000); // time for interaction
-      rescue_arm.hold();
-      delay(1000);
-      chassis.manual(-chassis.traverse_speed - 5, -chassis.traverse_speed);
-      delay(traverse_time + 2000);
-      chassis.halt();
-      delay(500); // back to T shape now
+      if (step == 0) // compensate - robot have left offset, left motor runs faster
+      {
+        chassis.manual(chassis.traverse_speed + speed_diff, chassis.traverse_speed);
+        delay(1500);
+        chassis.halt();
+        delay(3000); // time for interaction
+        rescue_arm.hold();
+        delay(1000);
+        chassis.manual(-chassis.traverse_speed - speed_diff, -chassis.traverse_speed);
+        delay(traverse_time + 1500);
+        chassis.halt();
+        delay(500); // back to T shape now
+      }
+      else // compensate - robot have right offset, right motor runs faster
+      {
+        chassis.manual(chassis.traverse_speed, chassis.traverse_speed);
+        delay(1500);
+        chassis.halt();
+        delay(3000); // time for interaction
+        rescue_arm.hold();
+        delay(1000);
+        chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed);
+        delay(traverse_time + 1500);
+        chassis.halt();
+        delay(500); // back to T shape now
+      }
     }
     else
     {
-      chassis.manual(-chassis.traverse_speed - 5, -chassis.traverse_speed);
-      delay(7500);
       chassis.halt();
+      delay(500);
+      if (step == 0)
+      {
+        chassis.manual(-chassis.traverse_speed - speed_diff, -chassis.traverse_speed);
+        delay(max_traverse_time);
+        chassis.halt();
+        delay(500);
+        chassis.rotate(1);
+        delay(rotate_time);
+        chassis.halt();
+        delay(500);
+        return victim_search(1);
+      }
+      else
+      {
+        chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed);
+        delay(max_traverse_time);
+        chassis.halt();
+        delay(500);
+        chassis.rotate(0);
+        delay(rotate_time);
+        chassis.halt();
+        delay(500);
+        return victim_search(2);
+      }
     }
   }
 
-  if (rotate_time > 0)
+  if (detected)
   {
-    chassis.rotate(1);
-    delay(rotate_time);
-  }
-  else
-  {
-    chassis.rotate90(1);
+    if (step == 0)
+    {
+      chassis.rotate(1);
+      delay(rotate_time);
+    }
+    else
+    {
+      chassis.rotate(0);
+      delay(rotate_time);
+    }
+    chassis.halt();
+    delay(500);
+    return victim_search(3);
   }
 
-  chassis.halt();
-}
-
-void approach2()
-{
-  // approach 2 - detect the victim sideways by cruising
-  sensors.radar_angle(90);
-  bool swc = 0; // 1 if there's a victim in the front
-  for (int angle = 80; angle < 100; angle++)
+  else // no victim
   {
-    float diff = 120.0 - sensors.detect_distance1();
-    if (diff > 800)
+    if (step == 0)
+    {
+      chassis.rotate90(1);
+      return victim_search(1);
+    }
+    else
     {
       chassis.rotate90(0);
-      chassis.traverse(0);
-      delay(2000);
-      chassis.halt();
-      swc = 1;
-      break;
+      return victim_search(2);
     }
   }
-  sensors.radar_angle(180);
-  chassis.manual(50, 50);
-  start_time = millis();
-  float record_time1 = 10000; // default value is the max time duration
-  while (millis() - start_time < record_time1)
-  {
-    if (sensors.detect_distance1() < 100)
-    {
-      record_time1 = millis() - start_time;
-      delay(500);
-      chassis.halt();
-      break;
-    }
-  }
-  chassis.rotate90(1);
-  sensors.radar_angle(90);
-  start_time = millis();
-  chassis.traverse(1);
-  float record_time2 = 10000;
-  while (millis() - start_time < record_time2)
-  {
-    if (sensors.detect_distance1() < 20)
-    {
-      delay(500);
-      record_time2 = millis() - start_time;
-      chassis.halt();
-      break;
-    }
-  }
-  delay(5000); // time for LED reactions
-  rescue_arm.hold();
-  delay(1000);
-  chassis.rotate90(1);
-  chassis.rotate90(1);
-  chassis.traverse(1);
-  delay(record_time2);
-  chassis.halt();
-  chassis.rotate90(0);
-  chassis.manual(50, 50);
-  delay(record_time1);
-  chassis.halt();
 }
 
 void state5(int *state)
@@ -738,6 +776,7 @@ void setup()
   pinMode(light_sensorL, INPUT);
 
   pinMode(light_sensorR, INPUT);
+  pinMode(LED, OUTPUT);
   AFMS.begin();
   Serial.begin(9600);
 }
@@ -753,7 +792,19 @@ void loop()
   chassis.manual(140, 140);
   delay(1000);
   */
-  approach1();
+  state0(&state);
+  for (int i = 0; i < 4; i++)
+  {
+    victim_search(0);
+    state2(&state);
+    if (i == 3)
+    {
+      break;
+    }
+    state3(&state);
+  }
+
+  state4(&state);
 
   while (1)
   {
