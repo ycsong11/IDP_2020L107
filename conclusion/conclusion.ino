@@ -15,6 +15,7 @@ int distance_sensor1 = A1;
 int distance_sensor2 = A0;
 int light_sensorL = A2;
 int light_sensorR = A3;
+int LED = 11;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *motorL = AFMS.getMotor(power_motorL);
@@ -32,6 +33,7 @@ public:
     uint8_t backward = FORWARD;
     void traverse(bool front) //if front = 1, go forward
     {
+        digitalWrite(LED, HIGH);
         motorL->setSpeed(100);
         motorR->setSpeed(100);
         if (front == 1)
@@ -53,7 +55,7 @@ public:
     }
     void manual(int speed_L, int speed_R)
     {
-
+        digitalWrite(LED, HIGH);
         if (speed_L >= 0)
         {
             motorL->run(forward);
@@ -80,6 +82,7 @@ public:
     }
     void rotate(bool right) //if right = 1, turn rightward
     {
+        digitalWrite(LED, HIGH);
         motorL->setSpeed(rotate_speed);
         motorR->setSpeed(rotate_speed);
         if (right == 1)
@@ -95,6 +98,7 @@ public:
     }
     void rotate90(bool right)
     {
+        digitalWrite(LED, HIGH);
         motorL->setSpeed(rotate_speed);
         motorR->setSpeed(rotate_speed);
         if (right == 1)
@@ -113,9 +117,11 @@ public:
         delay(10);
         motorL->run(RELEASE);
         motorR->run(RELEASE);
+        digitalWrite(LED, LOW);
     }
     void rotate45(bool right)
     {
+        digitalWrite(LED, HIGH);
         motorL->setSpeed(rotate_speed);
         motorR->setSpeed(rotate_speed);
         if (right == 1)
@@ -134,9 +140,11 @@ public:
         delay(10);
         motorL->run(RELEASE);
         motorR->run(RELEASE);
+        digitalWrite(LED, LOW);
     }
     void rotate10(bool right)
     {
+        digitalWrite(LED, HIGH);
         motorL->setSpeed(rotate_speed);
         motorR->setSpeed(rotate_speed);
         if (right == 1)
@@ -155,28 +163,9 @@ public:
         delay(10);
         motorL->run(RELEASE);
         motorR->run(RELEASE);
+        digitalWrite(LED, LOW);
     }
-    void scan90(bool right)
-    {
-        motorL->setSpeed(50);
-        motorR->setSpeed(50);
-        if (right == 1)
-        {
-            motorL->run(FORWARD);
-            motorR->run(BACKWARD);
-        }
-        else //figure out how to drive motor backwards
-        {
-            motorL->run(BACKWARD);
-            motorR->run(FORWARD);
-        }
-        delay(scan90_duration);
-        motorL->setSpeed(0);
-        motorR->setSpeed(0);
-        delay(10);
-        motorL->run(RELEASE);
-        motorR->run(RELEASE);
-    }
+    
     void halt()
     {
         motorL->setSpeed(100);
@@ -187,6 +176,7 @@ public:
         //delay(10);
         motorL->run(RELEASE);
         motorR->run(RELEASE);
+        digitalWrite(LED, LOW);
     }
 };
 
@@ -584,7 +574,7 @@ int victim_search(int step)
     float accu = 0;
     int count = 0;
     bool detected = 0;
-    int speed_diff = 7; //compensate robot offset
+    int speed_diff = 10; //compensate robot offset
     if (step == 0)
     {
         chassis.rotate(0);
@@ -628,13 +618,13 @@ int victim_search(int step)
         }
         else
         {
-            chassis.manual(chassis.traverse_speed, chassis.traverse_speed + speed_diff); // compensate - robot have right offset, right motor runs faster
+            chassis.manual(chassis.traverse_speed, chassis.traverse_speed); // compensate - robot have right offset, right motor runs faster
         }
 
         float accu_ = 0;
         int count_ = 0;
         int traverse_time = 0;
-        int max_traverse_time = 6000;
+        int max_traverse_time = 5500;
         while (millis() - start_time < max_traverse_time)
         {
             count_ += 1;
@@ -660,26 +650,26 @@ int victim_search(int step)
             if (step == 0) // compensate - robot have left offset, left motor runs faster
             {
                 chassis.manual(chassis.traverse_speed + speed_diff, chassis.traverse_speed);
-                delay(2000);
+                delay(1500);
                 chassis.halt();
                 delay(3000); // time for interaction
                 rescue_arm.hold();
                 delay(1000);
                 chassis.manual(-chassis.traverse_speed - speed_diff, -chassis.traverse_speed);
-                delay(traverse_time + 2000);
+                delay(traverse_time + 1500);
                 chassis.halt();
                 delay(500); // back to T shape now
             }
             else // compensate - robot have right offset, right motor runs faster
             {
-                chassis.manual(chassis.traverse_speed, chassis.traverse_speed + speed_diff);
-                delay(2000);
+                chassis.manual(chassis.traverse_speed, chassis.traverse_speed);
+                delay(1500);
                 chassis.halt();
                 delay(3000); // time for interaction
                 rescue_arm.hold();
                 delay(1000);
-                chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed - speed_diff);
-                delay(traverse_time + 2000);
+                chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed);
+                delay(traverse_time + 1500);
                 chassis.halt();
                 delay(500); // back to T shape now
             }
@@ -702,7 +692,7 @@ int victim_search(int step)
             }
             else
             {
-                chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed - speed_diff);
+                chassis.manual(-chassis.traverse_speed, -chassis.traverse_speed);
                 delay(max_traverse_time);
                 chassis.halt();
                 delay(500);
@@ -822,6 +812,7 @@ void setup()
     pinMode(light_sensorL, INPUT);
 
     pinMode(light_sensorR, INPUT);
+    pinMode(LED, OUTPUT);
     AFMS.begin();
     Serial.begin(9600);
 }
