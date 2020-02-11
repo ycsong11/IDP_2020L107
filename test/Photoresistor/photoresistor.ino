@@ -174,5 +174,5 @@ void loop() {
   Serial.print(analogRead(light_sensorR));
   Serial.print("   ");
   Serial.println(sensors.detect_white());
-  delay(50);
+  delay(500);
 }
