@@ -286,7 +286,6 @@ RescueArm rescue_arm;
 void state0(int *state)
 {
     //initialize
-    digitalWrite(LED_cont, HIGH);
     motor_arm->setSpeed(0);
     servo1.write(90);
     servo2.write(90);
@@ -645,7 +644,7 @@ bool victim_search(int step)
         count += 1;
         if (count == 2) // compare 2 readings with threshold
         {
-            if (accu > 80) // victim detected
+            if (accu > 75) // victim detected
             {
                 detected = 1;
                 chassis.halt();
@@ -676,6 +675,7 @@ bool victim_search(int step)
         }
         int traverse_time = 0;
         unsigned long start_time = millis();
+        int second_delay = 300;
         while ((millis() - start_time) < max_traverse_time)
         {
             count_ += 1;
@@ -685,7 +685,7 @@ bool victim_search(int step)
                 if (sensors.detect_distance2() > 450)
                 {
                     traverse_time = millis() - start_time;
-                    delay(300);
+                    delay(second_delay);
                     chassis.halt();
                     break;
                 }
@@ -698,7 +698,7 @@ bool victim_search(int step)
         }
         if (traverse_time > 0) // victim detected again
         {
-            int second_delay = 0;
+            
             if (step == 0) // compensate - robot have left offset, left motor runs faster
             {
                 /*
