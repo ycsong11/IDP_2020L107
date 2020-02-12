@@ -1,4 +1,5 @@
 
+\
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
@@ -17,7 +18,7 @@ int distance_sensor2 = A0;
 int light_sensorL = A2;
 int light_sensorR = A3;
 int LED = 11;
-int LED_cont = 12;
+int LED_cont = 13;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *motorL = AFMS.getMotor(power_motorL);
@@ -222,9 +223,7 @@ public:
   float detect_distance2()
   {
     float sensorValue = analogRead(distance2);
-    float cm = 10650.08 * pow(sensorValue, -0.935) - 10;
-    cm = roundf(cm);
-    return cm;
+    return sensorValue;
   }
 
   void radar_angle(int angle) // positive: sensor face right
@@ -287,7 +286,7 @@ RescueArm rescue_arm;
 void state0(int *state)
 {
   //initialize
-
+  digitalWrite(LED_cont, HIGH);
   motor_arm->setSpeed(0);
   servo1.write(90);
   servo2.write(90);
@@ -703,9 +702,9 @@ bool victim_search(int step)
         chassis.manual(chassis.traverse_speed + speed_diff_left, chassis.traverse_speed);
         delay(second_delay);
         chassis.halt();
-        digitalWrite(LED_cont, HIGH);
-        delay(1000); // time for interaction
         digitalWrite(LED_cont, LOW);
+        delay(1000); // time for interaction
+        digitalWrite(LED_cont, HIGH);
         delay(1000);
         rescue_arm.hold();
         delay(1000);
@@ -822,7 +821,7 @@ void loop()
   delay(1000);
   */
   state0(&state);
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 2; i++)
   {
     bool result = victim_search(0);
     state2(&state);
